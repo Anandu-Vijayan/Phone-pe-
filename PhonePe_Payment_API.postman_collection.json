@@ -1,0 +1,394 @@
+{
+	"info": {
+		"name": "PhonePe Payment API",
+		"description": "Complete Postman collection for PhonePe Payment SDK Integration with Node.js and MongoDB\n\n## Setup:\n1. Set `base_url` variable (default: http://localhost:3000)\n2. After initiating payment, copy `merchantTransactionId` from response\n3. Use it in status check and other endpoints\n\n## Payment Flow:\n1. Initiate Payment → Get redirectUrl\n2. Open redirectUrl in browser → Complete payment on PhonePe\n3. Check Status → Verify payment completed\n\n## Important:\n- Payment must be completed in browser, not Postman\n- Copy redirectUrl and open in browser to complete payment\n- Status updates automatically after payment completion",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "phonepe-payment-api",
+		"version": "1.0.0"
+	},
+	"item": [
+		{
+			"name": "Health Check",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						""
+					]
+				},
+				"description": "Check if the API server is running and get available endpoints"
+			},
+			"response": [
+				{
+					"name": "Success",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/",
+							"host": [
+								"{{base_url}}"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n    \"success\": true,\n    \"message\": \"PhonePe Payment SDK API is running\",\n    \"version\": \"1.0.0\",\n    \"endpoints\": {\n        \"initiate\": \"POST /api/payment/initiate\",\n        \"callback\": \"POST /api/payment/callback\",\n        \"status\": \"GET /api/payment/status/:merchantTransactionId\",\n        \"all\": \"GET /api/payment/all\",\n        \"get\": \"GET /api/payment/:merchantTransactionId\"\n    }\n}"
+				}
+			]
+		},
+		{
+			"name": "Initiate Payment",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Save merchantTransactionId to collection variable",
+							"if (pm.response.code === 200) {",
+							"    var jsonData = pm.response.json();",
+							"    if (jsonData.success && jsonData.data.merchantTransactionId) {",
+							"        pm.collectionVariables.set(\"merchantTransactionId\", jsonData.data.merchantTransactionId);",
+							"        pm.collectionVariables.set(\"redirectUrl\", jsonData.data.redirectUrl);",
+							"        // Variables saved: merchantTransactionId and redirectUrl available for next requests",
+							"    }",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"amount\": 100,\n    \"userId\": \"USER123\",\n    \"phoneNumber\": \"9999999999\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/api/payment/initiate",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"payment",
+						"initiate"
+					]
+				},
+				"description": "Initiate a new payment transaction with PhonePe.\n\n**Request Body:**\n- `amount`: Payment amount in rupees (number)\n- `userId`: User identifier (string)\n- `phoneNumber`: User phone number (string)\n\n**Response:**\n- `merchantTransactionId`: Unique transaction ID (save this!)\n- `redirectUrl`: URL to open in browser to complete payment\n- `status`: Payment status (initially PENDING)\n\n**⚠️ IMPORTANT:**\n1. Copy the `redirectUrl` from response\n2. Open it in a browser (not Postman!)\n3. Complete payment on PhonePe page\n4. Select Card payment method for card testing\n5. Use test card: 5123 4567 8901 2346 (Sandbox)\n6. Status will update automatically after payment"
+			},
+			"response": [
+				{
+					"name": "Success",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"amount\": 100,\n    \"userId\": \"USER123\",\n    \"phoneNumber\": \"9999999999\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/payment/initiate",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"payment",
+								"initiate"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n    \"success\": true,\n    \"message\": \"Payment initiated successfully\",\n    \"data\": {\n        \"merchantTransactionId\": \"TXN1234567890ABCDEF\",\n        \"redirectUrl\": \"https://mercury-uat.phonepe.com/transact/...\",\n        \"amount\": 100,\n        \"status\": \"PENDING\"\n    }\n}"
+				}
+			]
+		},
+		{
+			"name": "Check Payment Status",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/payment/status/{{merchantTransactionId}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"payment",
+						"status",
+						"{{merchantTransactionId}}"
+					]
+				},
+				"description": "Check the status of a payment transaction. This endpoint queries PhonePe API and automatically updates the payment status in the database.\n\n**Parameters:**\n- `merchantTransactionId`: Transaction ID from initiate payment response\n\n**Status Values:**\n- `PENDING`: Payment initiated but not completed\n- `SUCCESS`: Payment completed successfully\n- `FAILED`: Payment failed or declined\n- `CANCELLED`: Payment was cancelled\n\n**Note:**\n- Status updates automatically when payment is completed\n- This endpoint queries PhonePe for latest status\n- Database is updated automatically"
+			},
+			"response": [
+				{
+					"name": "Success - PENDING",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/payment/status/{{merchantTransactionId}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"payment",
+								"status",
+								"{{merchantTransactionId}}"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"body": "{\n    \"success\": true,\n    \"data\": {\n        \"merchantTransactionId\": \"TXN1234567890ABCDEF\",\n        \"amount\": 100,\n        \"status\": \"PENDING\",\n        \"phonepeTransactionId\": null,\n        \"createdAt\": \"2024-01-01T12:00:00.000Z\",\n        \"updatedAt\": \"2024-01-01T12:00:00.000Z\"\n    }\n}"
+				},
+				{
+					"name": "Success - COMPLETED",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/payment/status/{{merchantTransactionId}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"payment",
+								"status",
+								"{{merchantTransactionId}}"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"body": "{\n    \"success\": true,\n    \"data\": {\n        \"merchantTransactionId\": \"TXN1234567890ABCDEF\",\n        \"amount\": 100,\n        \"status\": \"SUCCESS\",\n        \"phonepeTransactionId\": \"PHONEPE_TXN_123\",\n        \"createdAt\": \"2024-01-01T12:00:00.000Z\",\n        \"updatedAt\": \"2024-01-01T12:05:00.000Z\"\n    }\n}"
+				}
+			]
+		},
+		{
+			"name": "Get Payment by ID",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/payment/{{merchantTransactionId}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"payment",
+						"{{merchantTransactionId}}"
+					]
+				},
+				"description": "Get complete payment details from database by merchant transaction ID.\n\n**Parameters:**\n- `merchantTransactionId`: Transaction ID from initiate payment response\n\n**Returns:**\n- Complete payment object with all details\n- Status, amount, timestamps, PhonePe response data"
+			},
+			"response": [
+				{
+					"name": "Success",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/payment/{{merchantTransactionId}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"payment",
+								"{{merchantTransactionId}}"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"body": "{\n    \"success\": true,\n    \"data\": {\n        \"_id\": \"...\",\n        \"merchantTransactionId\": \"TXN1234567890ABCDEF\",\n        \"amount\": 100,\n        \"currency\": \"INR\",\n        \"userId\": \"USER123\",\n        \"phoneNumber\": \"9999999999\",\n        \"status\": \"SUCCESS\",\n        \"phonepeTransactionId\": \"PHONEPE_TXN_123\",\n        \"redirectUrl\": \"https://mercury-uat.phonepe.com/...\",\n        \"createdAt\": \"2024-01-01T12:00:00.000Z\",\n        \"updatedAt\": \"2024-01-01T12:05:00.000Z\"\n    }\n}"
+				}
+			]
+		},
+		{
+			"name": "Get All Payments",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/payment/all",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"payment",
+						"all"
+					]
+				},
+				"description": "Get all payment transactions from database, sorted by creation date (newest first).\n\n**Returns:**\n- Array of all payment transactions\n- Count of total payments\n- Complete payment details for each transaction"
+			},
+			"response": [
+				{
+					"name": "Success",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/payment/all",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"payment",
+								"all"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"body": "{\n    \"success\": true,\n    \"count\": 2,\n    \"data\": [\n        {\n            \"merchantTransactionId\": \"TXN1234567890ABCDEF\",\n            \"amount\": 100,\n            \"status\": \"SUCCESS\",\n            \"createdAt\": \"2024-01-01T12:00:00.000Z\"\n        },\n        {\n            \"merchantTransactionId\": \"TXN0987654321FEDCBA\",\n            \"amount\": 200,\n            \"status\": \"PENDING\",\n            \"createdAt\": \"2024-01-01T11:00:00.000Z\"\n        }\n    ]\n}"
+				}
+			]
+		},
+		{
+			"name": "Payment Callback (Webhook)",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"response\": \"eyJzdWNjZXNzIjpmYWxzZSwibWVzc2FnZSI6Ik5vIHBheW1lbnQgdHJhbnNhY3Rpb24gZm91bmQiLCJjb2RlIjoiSU5GTyIsInBheWxvYWQiIjp7fX0=\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/api/payment/callback",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"payment",
+						"callback"
+					]
+				},
+				"description": "Webhook endpoint for PhonePe payment callbacks. This is automatically called by PhonePe after payment completion.\n\n**Note:**\n- This endpoint is usually called by PhonePe automatically\n- You can test it manually with a base64 encoded response\n- The response should contain payment status information\n- Status is automatically updated in database when callback is received\n\n**For Testing:**\n- Use ngrok to expose your local server\n- Update FRONTEND_URL in .env with ngrok URL\n- PhonePe will send callback to: https://your-ngrok-url.ngrok-free.app/api/payment/callback"
+			},
+			"response": [
+				{
+					"name": "Success",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"response\": \"BASE64_ENCODED_RESPONSE\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/payment/callback",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"payment",
+								"callback"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"body": "{\n    \"success\": true,\n    \"message\": \"Callback processed successfully\"\n}"
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:3000",
+			"type": "string",
+			"description": "Base URL for the API server"
+		},
+		{
+			"key": "merchantTransactionId",
+			"value": "",
+			"type": "string",
+			"description": "Merchant Transaction ID (automatically saved after initiating payment)"
+		},
+		{
+			"key": "redirectUrl",
+			"value": "",
+			"type": "string",
+			"description": "Redirect URL for payment completion (automatically saved after initiating payment)"
+		}
+	]
+}

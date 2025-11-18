@@ -1,0 +1,21 @@
+# Server Configuration
+PORT=3000
+NODE_ENV=development
+
+# MongoDB Configuration
+# For local MongoDB: mongodb://localhost:27017/phonepe_payments
+# For MongoDB Atlas: mongodb+srv://username:password@cluster.mongodb.net/phonepe_payments
+MONGODB_URI=mongodb://localhost:27017/phonepe_payments
+
+# PhonePe Configuration
+# Get these from your PhonePe Merchant/Developer Dashboard
+PHONEPE_CLIENT_ID=YOUR_CLIENT_ID
+PHONEPE_CLIENT_SECRET=YOUR_CLIENT_SECRET
+PHONEPE_CLIENT_VERSION=1
+PHONEPE_ENVIRONMENT=SANDBOX
+
+# Frontend URL (for redirects and callbacks)
+# For local development: http://localhost:3000
+# For testing with ngrok: https://your-ngrok-url.ngrok-free.app
+FRONTEND_URL=http://localhost:3000
+
