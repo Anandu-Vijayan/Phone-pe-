@@ -43,13 +43,17 @@ router.post('/initiate', async (req, res) => {
     // - redirectUrl: Where user is redirected after payment (simple success page)
     // - callbackUrl: Webhook endpoint that PhonePe calls (must be publicly accessible)
     const baseUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-    
+
+    // Include merchantTransactionId in the redirect URL so the frontend
+    // can show/check the transaction after redirect.
+    const redirectUrl = `${baseUrl}/payment/success?merchantTransactionId=${merchantTransactionId}`;
+
     const paymentData = {
       merchantTransactionId,
       amount,
       // redirectUrl: Simple success page (no frontend needed)
       // User sees success message after payment completion
-      redirectUrl: `${baseUrl}/payment/success`,
+      redirectUrl,
       // callbackUrl: Webhook endpoint (PhonePe calls this automatically)
       // For local testing: Use ngrok to make this accessible
       // Example: ngrok http 3000, then set FRONTEND_URL=https://your-ngrok-url.ngrok-free.app
@@ -72,9 +76,10 @@ router.post('/initiate', async (req, res) => {
       });
     }
 
-    // Update payment with PhonePe response
+    // Update payment with PhonePe response. If PhonePe returns a redirectUrl
+    // use that, otherwise fall back to the one we generated above.
     payment.phonepeResponse = phonepeResponse.data;
-    payment.redirectUrl = phonepeResponse.redirectUrl;
+    payment.redirectUrl = phonepeResponse.redirectUrl || redirectUrl;
     await payment.save();
 
     res.json({
@@ -82,7 +87,7 @@ router.post('/initiate', async (req, res) => {
       message: 'Payment initiated successfully',
       data: {
         merchantTransactionId: payment.merchantTransactionId,
-        redirectUrl: phonepeResponse.redirectUrl,
+        redirectUrl: payment.redirectUrl,
         amount: payment.amount,
         status: payment.status,
       },
